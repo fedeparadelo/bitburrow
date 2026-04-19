@@ -98,6 +98,63 @@ body {
   background-image:
     radial-gradient(ellipse at 15% 15%, #5aaa3a 0%, transparent 45%),
     radial-gradient(ellipse at 85% 80%, #3a7a1a 0%, transparent 45%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Character ── */
+.character {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 50;
+  will-change: left, top;
+}
+
+.char-sprite {
+  font-size: 30px;
+  line-height: 1;
+  filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.5));
+  display: inline-block;
+  transform-origin: center;
+}
+
+.char-sprite.facing-left {
+  transform: scaleX(-1);
+}
+
+.char-sprite.walking {
+  animation: char-bob 0.32s ease-in-out infinite;
+}
+
+.char-sprite.walking.facing-left {
+  animation: char-bob-left 0.32s ease-in-out infinite;
+}
+
+@keyframes char-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+
+@keyframes char-bob-left {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50%       { transform: scaleX(-1) translateY(-5px); }
+}
+
+.controls-hint {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 5px;
+  color: rgba(255,255,255,0.55);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.6);
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  z-index: 20;
 }
 
 .planting-hint {

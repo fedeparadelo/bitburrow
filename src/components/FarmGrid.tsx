@@ -1,16 +1,20 @@
+import { useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { CROP_MAP } from '../data/crops';
 import { FarmPlot } from './FarmPlot';
+import { Character } from './Character';
 
 export function FarmGrid() {
   const { state, harvestAll } = useGame();
+  const farmRef = useRef<HTMLDivElement>(null);
   const readyCount = state.plots.filter(p => p.state === 'ready').length;
   const selectedCrop = state.selectedSeed ? CROP_MAP[state.selectedSeed] : null;
   const canPlantSelected =
     selectedCrop && state.inventory[state.selectedSeed!] > 0;
 
   return (
-    <div className="farm-area">
+    <div className="farm-area" ref={farmRef}>
+      <Character containerRef={farmRef} />
       {canPlantSelected && (
         <div className="planting-hint">
           {selectedCrop.emoji} Click a plot to plant!
@@ -26,6 +30,7 @@ export function FarmGrid() {
           Harvest All ({readyCount}) ✓
         </button>
       )}
+      <div className="controls-hint">WASD / ← ↑ → ↓ to move</div>
     </div>
   );
 }
