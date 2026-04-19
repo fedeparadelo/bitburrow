@@ -1,0 +1,483 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #1a0e05;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+}
+
+/* ── Game shell ── */
+.game {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #4a8a2a;
+}
+
+/* ── HUD ── */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #3b1f0a 0%, #2c1810 100%);
+  border-bottom: 3px solid #6b3a2a;
+  min-height: 58px;
+}
+
+.hud-title {
+  font-size: 10px;
+  color: #ffd700;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.hud-coins {
+  font-size: 11px;
+  color: #ffd700;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.hud-level {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 7px;
+  color: #f5deb3;
+}
+
+.xp-bar {
+  width: 72px;
+  height: 7px;
+  background: #111;
+  border: 1px solid #6b3a2a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4169e1, #00bfff);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.xp-text {
+  font-size: 6px;
+  color: #aaa;
+}
+
+/* ── Farm area ── */
+.farm-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #4a8a2a;
+  background-image:
+    radial-gradient(ellipse at 15% 15%, #5aaa3a 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 80%, #3a7a1a 0%, transparent 45%);
+}
+
+.planting-hint {
+  font-size: 7px;
+  color: #ffd700;
+  text-shadow: 1px 1px 0 #000;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ffd70055;
+  animation: hint-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.farm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 70px);
+  gap: 7px;
+}
+
+.harvest-all-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 8px 14px;
+  background: #39c820;
+  color: #000;
+  border: 3px solid #1a8a00;
+  border-bottom-width: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.1s, border-bottom-width 0.1s;
+}
+
+.harvest-all-btn:hover {
+  background: #50df30;
+}
+
+.harvest-all-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 3px;
+}
+
+/* ── Farm plot ── */
+.plot {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  user-select: none;
+  overflow: visible;
+  transition: transform 0.1s;
+}
+
+.plot-empty {
+  background: linear-gradient(145deg, #9b6840 0%, #7a4f2d 100%);
+  border: 2px solid #5a3015;
+  border-bottom: 5px solid #3a1a00;
+  border-right: 3px solid #5a3015;
+}
+
+.plot-planted {
+  background: linear-gradient(145deg, #6b4423 0%, #543010 100%);
+  border: 2px solid #3a1a00;
+  border-bottom: 5px solid #2a0a00;
+  border-right: 3px solid #3a1a00;
+}
+
+.plot-ready {
+  background: linear-gradient(145deg, #6b4423 0%, #543010 100%);
+  border: 2px solid #39ff14;
+  border-bottom: 5px solid #1adf00;
+  border-right: 3px solid #29ef04;
+  animation: pulse-ready 1.2s ease-in-out infinite;
+}
+
+.plot-clickable {
+  cursor: pointer;
+}
+
+.plot-clickable:active {
+  transform: scale(0.93);
+}
+
+.plot-hinted {
+  background: linear-gradient(145deg, #b08050 0%, #9a6a3d 100%) !important;
+  border-color: #e8c060 !important;
+}
+
+.plot-hinted:hover {
+  background: linear-gradient(145deg, #c09060 0%, #aa7a4d 100%) !important;
+  transform: scale(1.04);
+}
+
+@keyframes pulse-ready {
+  0%, 100% { box-shadow: 0 0 6px rgba(57,255,20,0.4), 0 0 0 0 rgba(57,255,20,0.1); }
+  50%       { box-shadow: 0 0 18px rgba(57,255,20,0.8), 0 0 0 4px rgba(57,255,20,0.15); }
+}
+
+.plot-emoji {
+  font-size: 28px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.plot-emoji-ready {
+  animation: bounce 0.75s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-5px) scale(1.08); }
+}
+
+/* Progress bar */
+.progress-bar {
+  position: absolute;
+  bottom: 4px;
+  left: 5px;
+  right: 5px;
+  height: 5px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 2px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #39ff14, #7fff00);
+  border-radius: 2px;
+  transition: width 0.25s ease;
+  box-shadow: 0 0 4px rgba(57,255,20,0.6);
+}
+
+.time-left {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5px;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
+  white-space: nowrap;
+}
+
+.ready-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  background: #ffd700;
+  color: #000;
+  border-radius: 50%;
+  font-size: 10px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #8b6000;
+  z-index: 10;
+}
+
+.floating-coins {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: #ffd700;
+  pointer-events: none;
+  animation: float-up 1.2s ease-out forwards;
+  white-space: nowrap;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  z-index: 100;
+}
+
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-52px); }
+}
+
+/* ── Bottom panel ── */
+.bottom-panel {
+  background: linear-gradient(180deg, #2c1810 0%, #3b1f0a 100%);
+  border-top: 3px solid #6b3a2a;
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid #6b3a2a;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  background: transparent;
+  border: none;
+  color: #8b6040;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab-btn.active {
+  background: #4a2510;
+  color: #f5deb3;
+  border-bottom: 2px solid #ffd700;
+}
+
+.tab-btn:hover:not(.active) {
+  background: #3a1a08;
+  color: #c0906a;
+}
+
+.tab-badge {
+  background: #ffd700;
+  color: #000;
+  border-radius: 8px;
+  padding: 1px 5px;
+  font-size: 7px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.tab-content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 165px;
+}
+
+/* ── Seeds tab ── */
+.seeds-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seed-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 7px;
+  background: #4a2510;
+  border: 2px solid #6b3a2a;
+  border-bottom: 4px solid #3a1a00;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  color: #f5deb3;
+  transition: all 0.1s;
+  min-width: 62px;
+}
+
+.seed-btn.selected {
+  background: #7a5030;
+  border-color: #ffd700;
+  border-bottom-color: #b89000;
+  box-shadow: 0 0 10px rgba(255,215,0,0.35);
+}
+
+.seed-btn:hover:not(.selected) {
+  background: #5a3020;
+  border-color: #9b6040;
+}
+
+.seed-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.seed-emoji {
+  font-size: 20px;
+}
+
+.seed-name {
+  font-size: 5px;
+  color: #c0a080;
+}
+
+.seed-count {
+  font-size: 7px;
+  color: #ffd700;
+}
+
+.empty-state {
+  color: #8b6040;
+  font-size: 7px;
+  text-align: center;
+  padding: 24px 8px;
+  line-height: 2;
+}
+
+/* ── Shop tab ── */
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #3a1f0a;
+  border: 1px solid #6b3a2a;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.shop-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.shop-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.shop-name {
+  font-size: 7px;
+  color: #f5deb3;
+}
+
+.shop-meta {
+  font-size: 5px;
+  color: #8b6040;
+}
+
+.shop-btn {
+  padding: 5px 7px;
+  background: #5a8a2a;
+  border: 2px solid #3a6a0a;
+  border-bottom: 4px solid #2a4a00;
+  border-radius: 3px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+
+.shop-btn:hover:not(.disabled):not(:disabled) {
+  background: #6a9a3a;
+}
+
+.shop-btn:active:not(.disabled):not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.shop-btn.disabled,
+.shop-btn:disabled {
+  background: #2a2a2a;
+  border-color: #1a1a1a;
+  color: #555;
+  cursor: not-allowed;
+}
