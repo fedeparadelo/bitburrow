@@ -6,10 +6,16 @@ import {
   useEffect,
 } from 'react';
 import type { ReactNode } from 'react';
-import type { GameState, CropId, PlotState } from '../types/game';
+import type { GameState, CropId, PlotState, AnimalType, AnimalState, Toast } from '../types/game';
 import { CROP_MAP, XP_PER_LEVEL } from '../data/crops';
+import { ANIMAL_MAP } from '../data/animals';
 
 const PLOT_COUNT = 16;
+let toastCounter = 0;
+
+function makeToast(emoji: string, message: string, duration = 2500): Toast {
+  return { id: ++toastCounter, emoji, message, expiresAt: Date.now() + duration };
+}
 
 function defaultState(): GameState {
   return {
@@ -25,16 +31,16 @@ function defaultState(): GameState {
     })),
     inventory: { sunflower: 5, carrot: 0, potato: 0, pumpkin: 0, corn: 0 },
     selectedSeed: null,
+    animals: [],
+    toasts: [],
   };
 }
 
 function loadState(): GameState {
   try {
-    const raw = localStorage.getItem('bitburrow_v1');
-    if (raw) return { ...defaultState(), ...JSON.parse(raw), tick: 0 };
-  } catch {
-    // ignore
-  }
+    const raw = localStorage.getItem('bitburrow_v2');
+    if (raw) return { ...defaultState(), ...JSON.parse(raw), tick: 0, toasts: [] };
+  } catch { /* ignore */ }
   return defaultState();
 }
 
@@ -44,7 +50,19 @@ type Action =
   | { type: 'HARVEST'; plotId: number }
   | { type: 'HARVEST_ALL' }
   | { type: 'BUY_SEED'; cropId: CropId; qty: number }
+  | { type: 'BUY_ANIMAL'; animalType: AnimalType }
+  | { type: 'COLLECT_ANIMAL'; animalId: string }
   | { type: 'TICK' };
+
+function withLevel(state: GameState, addedXp: number) {
+  const newXp = state.xp + addedXp;
+  const newLevel = Math.floor(newXp / XP_PER_LEVEL) + 1;
+  const toasts = [...state.toasts];
+  if (newLevel > state.level) {
+    toasts.push(makeToast('⭐', `Level Up! Lv.${newLevel}!`, 4000));
+  }
+  return { xp: newXp, level: newLevel, toasts };
+}
 
 function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
@@ -74,12 +92,12 @@ function reducer(state: GameState, action: Action): GameState {
       const plot = state.plots[action.plotId];
       if (plot.state !== 'ready' || !plot.cropId) return state;
       const crop = CROP_MAP[plot.cropId];
-      const newXp = state.xp + crop.xp;
+      const leveled = withLevel(state, crop.xp);
       return {
         ...state,
+        ...leveled,
         coins: state.coins + crop.reward,
-        xp: newXp,
-        level: Math.floor(newXp / XP_PER_LEVEL) + 1,
+        toasts: [...leveled.toasts, makeToast(crop.emoji, `+${crop.reward}🪙`)],
         plots: state.plots.map(p =>
           p.id === action.plotId
             ? { ...p, state: 'empty' as PlotState, cropId: null, plantedAt: null }
@@ -98,12 +116,12 @@ function reducer(state: GameState, action: Action): GameState {
         coins += crop.reward;
         xp += crop.xp;
       });
-      const newXp = state.xp + xp;
+      const leveled = withLevel(state, xp);
       return {
         ...state,
+        ...leveled,
         coins: state.coins + coins,
-        xp: newXp,
-        level: Math.floor(newXp / XP_PER_LEVEL) + 1,
+        toasts: [...leveled.toasts, makeToast('🌾', `+${coins}🪙 Harvest!`)],
         plots: state.plots.map(p =>
           p.state === 'ready'
             ? { ...p, state: 'empty' as PlotState, cropId: null, plantedAt: null }
@@ -126,18 +144,74 @@ function reducer(state: GameState, action: Action): GameState {
       };
     }
 
+    case 'BUY_ANIMAL': {
+      const animal = ANIMAL_MAP[action.animalType];
+      if (state.coins < animal.cost) return state;
+      const newAnimal = {
+        id: `${action.animalType}_${Date.now()}`,
+        type: action.animalType,
+        startX: 60 + Math.random() * 260,
+        startY: 60 + Math.random() * 180,
+        state: 'producing' as AnimalState,
+        lastCollected: Date.now(),
+      };
+      return {
+        ...state,
+        coins: state.coins - animal.cost,
+        animals: [...state.animals, newAnimal],
+        toasts: [...state.toasts, makeToast(animal.emoji, `${animal.name} joined your farm!`)],
+      };
+    }
+
+    case 'COLLECT_ANIMAL': {
+      const owned = state.animals.find(a => a.id === action.animalId);
+      if (!owned || owned.state !== 'ready') return state;
+      const animal = ANIMAL_MAP[owned.type];
+      const leveled = withLevel(state, animal.xp);
+      return {
+        ...state,
+        ...leveled,
+        coins: state.coins + animal.reward,
+        toasts: [...leveled.toasts, makeToast(animal.emoji, `+${animal.reward}🪙 ${animal.name}!`)],
+        animals: state.animals.map(a =>
+          a.id === action.animalId
+            ? { ...a, state: 'producing' as AnimalState, lastCollected: Date.now() }
+            : a
+        ),
+      };
+    }
+
     case 'TICK': {
       const now = Date.now();
-      let changed = false;
+
+      let plotsChanged = false;
       const plots = state.plots.map(p => {
         if (p.state !== 'planted' || !p.cropId || !p.plantedAt) return p;
         if (now - p.plantedAt >= CROP_MAP[p.cropId].growTime) {
-          changed = true;
+          plotsChanged = true;
           return { ...p, state: 'ready' as PlotState };
         }
         return p;
       });
-      return { ...state, tick: state.tick + 1, plots: changed ? plots : state.plots };
+
+      let animalsChanged = false;
+      const animals = state.animals.map(a => {
+        if (a.state === 'producing' && now - a.lastCollected >= ANIMAL_MAP[a.type].productionTime) {
+          animalsChanged = true;
+          return { ...a, state: 'ready' as AnimalState };
+        }
+        return a;
+      });
+
+      const toasts = state.toasts.filter(t => t.expiresAt > now);
+
+      return {
+        ...state,
+        tick: state.tick + 1,
+        plots: plotsChanged ? plots : state.plots,
+        animals: animalsChanged ? animals : state.animals,
+        toasts,
+      };
     }
 
     default:
@@ -152,6 +226,8 @@ interface GameCtx {
   harvest: (plotId: number) => void;
   harvestAll: () => void;
   buySeed: (cropId: CropId, qty: number) => void;
+  buyAnimal: (type: AnimalType) => void;
+  collectAnimal: (id: string) => void;
 }
 
 const GameContext = createContext<GameCtx | null>(null);
@@ -165,18 +241,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const { tick: _tick, ...save } = state;
-    localStorage.setItem('bitburrow_v1', JSON.stringify(save));
+    const { tick: _t, toasts: _toast, ...save } = state;
+    localStorage.setItem('bitburrow_v2', JSON.stringify(save));
   }, [state]);
 
-  const selectSeed = useCallback((seed: CropId) => dispatch({ type: 'SELECT_SEED', seed }), []);
-  const plant = useCallback((plotId: number) => dispatch({ type: 'PLANT', plotId }), []);
-  const harvest = useCallback((plotId: number) => dispatch({ type: 'HARVEST', plotId }), []);
-  const harvestAll = useCallback(() => dispatch({ type: 'HARVEST_ALL' }), []);
-  const buySeed = useCallback((cropId: CropId, qty: number) => dispatch({ type: 'BUY_SEED', cropId, qty }), []);
+  const selectSeed    = useCallback((seed: CropId)       => dispatch({ type: 'SELECT_SEED', seed }), []);
+  const plant         = useCallback((plotId: number)      => dispatch({ type: 'PLANT', plotId }), []);
+  const harvest       = useCallback((plotId: number)      => dispatch({ type: 'HARVEST', plotId }), []);
+  const harvestAll    = useCallback(()                    => dispatch({ type: 'HARVEST_ALL' }), []);
+  const buySeed       = useCallback((cropId: CropId, qty: number) => dispatch({ type: 'BUY_SEED', cropId, qty }), []);
+  const buyAnimal     = useCallback((animalType: AnimalType)      => dispatch({ type: 'BUY_ANIMAL', animalType }), []);
+  const collectAnimal = useCallback((animalId: string)            => dispatch({ type: 'COLLECT_ANIMAL', animalId }), []);
 
   return (
-    <GameContext.Provider value={{ state, selectSeed, plant, harvest, harvestAll, buySeed }}>
+    <GameContext.Provider value={{ state, selectSeed, plant, harvest, harvestAll, buySeed, buyAnimal, collectAnimal }}>
       {children}
     </GameContext.Provider>
   );

@@ -179,6 +179,153 @@ body {
   gap: 7px;
 }
 
+/* ── Decorations ── */
+.farm-decor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1;
+  filter: drop-shadow(1px 2px 0 rgba(0,0,0,0.3));
+}
+
+/* ── Animals ── */
+.animal {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: none;
+  will-change: left, top;
+}
+
+.animal.animal-ready {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 40;
+}
+
+.animal-sprite {
+  font-size: 26px;
+  line-height: 1;
+  display: inline-block;
+  transform-origin: center;
+  filter: drop-shadow(1px 2px 0 rgba(0,0,0,0.4));
+}
+
+.animal-sprite.facing-left { transform: scaleX(-1); }
+
+.animal-sprite.walking {
+  animation: animal-bob 0.4s ease-in-out infinite;
+}
+
+.animal-sprite.facing-left.walking {
+  animation: animal-bob-left 0.4s ease-in-out infinite;
+}
+
+.animal-sprite.ready-anim {
+  animation: animal-ready 0.6s ease-in-out infinite;
+}
+
+@keyframes animal-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+@keyframes animal-bob-left {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50%       { transform: scaleX(-1) translateY(-3px); }
+}
+
+@keyframes animal-ready {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-6px) scale(1.1); }
+}
+
+.animal-collect-badge {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffd700;
+  color: #000;
+  font-size: 6px;
+  font-family: 'Press Start 2P', monospace;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #8b6000;
+  white-space: nowrap;
+  animation: badge-bob 0.6s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(255,215,0,0.6);
+}
+
+@keyframes badge-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-3px); }
+}
+
+.animal-shadow {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 5px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 50%;
+}
+
+/* ── Toasts ── */
+.toast-stack {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 200;
+  align-items: center;
+}
+
+.toast {
+  background: rgba(20, 10, 4, 0.88);
+  border: 1px solid #6b3a2a;
+  border-radius: 5px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: toast-in 0.3s ease-out;
+  white-space: nowrap;
+}
+
+.toast-levelup {
+  border-color: #ffd700;
+  background: rgba(60, 40, 0, 0.92);
+  box-shadow: 0 0 12px rgba(255,215,0,0.4);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.toast-emoji { font-size: 14px; }
+.toast-msg   { font-size: 7px; color: #f5deb3; }
+
+/* ── Harvest row ── */
+.harvest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .harvest-all-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
@@ -192,13 +339,14 @@ body {
   transition: transform 0.1s, border-bottom-width 0.1s;
 }
 
-.harvest-all-btn:hover {
-  background: #50df30;
-}
+.harvest-all-btn:hover { background: #50df30; }
+.harvest-all-btn:active { transform: translateY(2px); border-bottom-width: 3px; }
 
-.harvest-all-btn:active {
-  transform: translateY(2px);
-  border-bottom-width: 3px;
+.animal-ready-hint {
+  font-size: 6px;
+  color: #ffd700;
+  text-shadow: 1px 1px 0 #000;
+  animation: hint-pulse 1s ease-in-out infinite;
 }
 
 /* ── Farm plot ── */
@@ -468,6 +616,41 @@ body {
 }
 
 /* ── Shop tab ── */
+.shop-root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shop-section-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.shop-section-btn {
+  flex: 1;
+  padding: 5px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  background: #2a1208;
+  border: 1px solid #6b3a2a;
+  border-radius: 3px;
+  color: #8b6040;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.shop-section-btn.active {
+  background: #5a3020;
+  color: #f5deb3;
+  border-color: #ffd700;
+}
+
+.owned-badge {
+  color: #ffd700;
+}
+
 .shop-list {
   display: flex;
   flex-direction: column;
