@@ -5,16 +5,18 @@ import { FarmPlot } from './FarmPlot';
 import { Character } from './Character';
 import { AnimalLayer } from './AnimalLayer';
 import { ToastStack } from './ToastStack';
+import { TreeSprite } from './sprites/TreeSprite';
 
-const DECOR = [
-  { emoji: '🌲', style: { top: 4, left: 4, fontSize: 22 } },
-  { emoji: '🌲', style: { top: 4, right: 4, fontSize: 22 } },
-  { emoji: '🌲', style: { bottom: 22, left: 4, fontSize: 22 } },
-  { emoji: '🌲', style: { bottom: 22, right: 4, fontSize: 22 } },
-  { emoji: '🌸', style: { top: 28, left: 18, fontSize: 12 } },
-  { emoji: '🌼', style: { top: 28, right: 18, fontSize: 12 } },
-  { emoji: '🌿', style: { bottom: 44, left: 18, fontSize: 12 } },
-  { emoji: '🍀', style: { bottom: 44, right: 18, fontSize: 12 } },
+const TREES: Array<{ variant: 'a' | 'b' | 'rock'; style: React.CSSProperties }> = [
+  { variant: 'a',    style: { top: 4,   left: 4   } },
+  { variant: 'a',    style: { top: 4,   right: 4  } },
+  { variant: 'b',    style: { bottom: 30, left: 4   } },
+  { variant: 'b',    style: { bottom: 30, right: 4  } },
+  { variant: 'a',    style: { top: 4,   left: '47%' } },
+  { variant: 'rock', style: { bottom: 36, left: '38%' } },
+  { variant: 'rock', style: { bottom: 36, right: '38%' } },
+  { variant: 'b',    style: { top: 42,  left: 6   } },
+  { variant: 'a',    style: { top: 42,  right: 6  } },
 ];
 
 export function FarmGrid() {
@@ -27,10 +29,10 @@ export function FarmGrid() {
 
   return (
     <div className="farm-area" ref={farmRef}>
-      {/* Decorations */}
-      {DECOR.map((d, i) => (
-        <span key={i} className="farm-decor" style={d.style as React.CSSProperties}>
-          {d.emoji}
+      {/* SVG tree / rock decorations */}
+      {TREES.map((t, i) => (
+        <span key={i} className="farm-decor" style={t.style as React.CSSProperties}>
+          <TreeSprite variant={t.variant} />
         </span>
       ))}
 

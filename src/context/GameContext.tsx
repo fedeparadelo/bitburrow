@@ -10,7 +10,7 @@ import type { GameState, CropId, PlotState, AnimalType, AnimalState, Toast } fro
 import { CROP_MAP, XP_PER_LEVEL } from '../data/crops';
 import { ANIMAL_MAP } from '../data/animals';
 
-const PLOT_COUNT = 16;
+const PLOT_COUNT = 36;
 let toastCounter = 0;
 
 function makeToast(emoji: string, message: string, duration = 2500): Toast {
@@ -38,7 +38,7 @@ function defaultState(): GameState {
 
 function loadState(): GameState {
   try {
-    const raw = localStorage.getItem('bitburrow_v2');
+    const raw = localStorage.getItem('bitburrow_v3');
     if (raw) return { ...defaultState(), ...JSON.parse(raw), tick: 0, toasts: [] };
   } catch { /* ignore */ }
   return defaultState();
@@ -242,7 +242,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { tick: _t, toasts: _toast, ...save } = state;
-    localStorage.setItem('bitburrow_v2', JSON.stringify(save));
+    localStorage.setItem('bitburrow_v3', JSON.stringify(save));
   }, [state]);
 
   const selectSeed    = useCallback((seed: CropId)       => dispatch({ type: 'SELECT_SEED', seed }), []);

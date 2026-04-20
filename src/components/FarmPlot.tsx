@@ -50,8 +50,10 @@ export function FarmPlot({ plot }: { plot: Plot }) {
     }
   }
 
+  const terrain = ['', ' terrain-b', ' terrain-c'][plot.id % 3];
+
   const classes = [
-    'plot',
+    'plot' + terrain,
     `plot-${plot.state}`,
     canPlant ? 'plot-hinted' : '',
     plot.state === 'ready' || canPlant ? 'plot-clickable' : '',
